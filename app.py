@@ -115,9 +115,15 @@ def get_team_data(team_name):
         fig_pts = px.line(season_points, x='SEASON', y='PTS', title=f'{team_name} Avg Points by Season', markers=True)
         fig_pts.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
+        # Prepare table data
+        # Merge wins and points for the table
+        team_season_stats = pd.merge(season_wins, season_points, on='SEASON')
+        season_stats_data = team_season_stats.sort_values('SEASON', ascending=False).to_dict('records')
+        
         return jsonify({
             'wins_chart': json.loads(json.dumps(fig_wins, cls=plotly.utils.PlotlyJSONEncoder)),
-            'pts_chart': json.loads(json.dumps(fig_pts, cls=plotly.utils.PlotlyJSONEncoder))
+            'pts_chart': json.loads(json.dumps(fig_pts, cls=plotly.utils.PlotlyJSONEncoder)),
+            'season_stats': season_stats_data
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -166,7 +172,8 @@ def get_player_data(player_id):
         
         return jsonify({
             'name': player_name,
-            'stats_chart': json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+            'stats_chart': json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)),
+            'player_stats': season_stats.sort_values('SEASON', ascending=False).to_dict('records')
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

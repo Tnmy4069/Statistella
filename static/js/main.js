@@ -46,6 +46,28 @@ async function loadTeamData() {
 
         Plotly.newPlot('ptsChart', data.pts_chart.data, layoutPts, { responsive: true, displayModeBar: false });
 
+        // Populate Table
+        const tableBody = document.getElementById('teamStatsBody');
+        const tableContainer = document.getElementById('teamStatsTable');
+
+        if (data.season_stats && data.season_stats.length > 0) {
+            tableBody.innerHTML = '';
+            data.season_stats.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-dark-bg/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-accent-primary">${row.SEASON}</td>
+                    <td class="p-3">${row.WIN}</td>
+                    <td class="p-3 font-semibold text-accent-secondary">${row.WIN_PCT.toFixed(1)}%</td>
+                    <td class="p-3">${row.PTS.toFixed(1)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            tableContainer.classList.remove('hidden');
+        } else {
+            tableContainer.classList.add('hidden');
+        }
+
     } catch (error) {
         console.error('Error fetching team data:', error);
     }
@@ -124,6 +146,28 @@ async function loadPlayerData(playerId) {
         layout.yaxis = { ...data.stats_chart.layout.yaxis, ...commonLayout.yaxis };
 
         Plotly.newPlot('playerChart', data.stats_chart.data, layout, { responsive: true, displayModeBar: false });
+
+        // Populate Table
+        const tableBody = document.getElementById('playerStatsBody');
+        const tableContainer = document.getElementById('playerStatsTable');
+
+        if (data.player_stats && data.player_stats.length > 0) {
+            tableBody.innerHTML = '';
+            data.player_stats.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-dark-bg/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-accent-primary">${row.SEASON}</td>
+                    <td class="p-3">${row.PTS.toFixed(1)}</td>
+                    <td class="p-3">${row.AST.toFixed(1)}</td>
+                    <td class="p-3">${row.REB.toFixed(1)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            tableContainer.classList.remove('hidden');
+        } else {
+            tableContainer.classList.add('hidden');
+        }
 
     } catch (error) {
         console.error('Error loading player data:', error);
