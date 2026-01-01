@@ -13,16 +13,39 @@ data = clean_data(raw_data)
 
 @app.route('/')
 def index():
-    # Trends: Avg Points per Game over Seasons
-    games = data['games']
-    season_stats = games.groupby('SEASON')[['PTS_home', 'PTS_away']].mean()
-    season_stats['Avg_PTS'] = (season_stats['PTS_home'] + season_stats['PTS_away']) / 2
-    season_stats = season_stats.reset_index()
-    
-    fig = px.line(season_stats, x='SEASON', y='Avg_PTS', title='Average Points per Game per Season', markers=True)
-    fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-    
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    try:
+        # Trends: Avg Points per Game over Seasons
+        games = data['games']
+        season_stats = games.groupby('SEASON')[['PTS_home', 'PTS_away']].mean().reset_index()
+        
+        # Create Stacked Area Chart
+        fig = px.area(season_stats, x='SEASON', y=['PTS_home', 'PTS_away'], 
+                      title='Average Points per Game per Season (Home vs Away)',
+                      labels={'value': 'Points', 'variable': 'Type'},
+                      color_discrete_map={'PTS_home': '#ef4444', 'PTS_away': '#3b82f6'})
+        
+        graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        
+        # Insights
+        games['TOTAL_PTS'] = games['PTS_home'] + games['PTS_away']
+        highest_scoring_game = games.loc[games['TOTAL_PTS'].idxmax()]
+        hsg_text = f"{pd.to_datetime(highest_scoring_game['GAME_DATE_EST']).strftime('%Y-%m-%d')}: {int(highest_scoring_game['TOTAL_PTS'])} Pts"
+        
+        best_season = season_stats.loc[(season_stats['PTS_home'] + season_stats['PTS_away']).idxmax()]
+        bss_text = f"{int(best_season['SEASON'])}: {int(best_season['PTS_home'] + best_season['PTS_away'])} PPG"
+        
+        insights = {
+            'highest_scoring_game': hsg_text,
+            'best_scoring_season': bss_text
+        }
+        
+        # Prepare data for table
+        season_data = season_stats.sort_values('SEASON', ascending=False).to_dict('records')
+        
+        return render_template('index.html', graphJSON=graphJSON, insights=insights, season_data=season_data)
+    except Exception as e:
+        print(f"Error in index route: {e}")
+        return str(e), 500
     
     # Insights
     # 1. Highest Scoring Game
@@ -110,7 +133,14 @@ def search_players():
     unique_players = players[['PLAYER_NAME', 'PLAYER_ID']].drop_duplicates()
     matches = unique_players[unique_players['PLAYER_NAME'].str.lower().str.contains(query)].head(10)
     
-    return jsonify(matches.to_dict('records'))
+    # Replace NaN with None
+    records = matches.to_dict('records')
+    for record in records:
+        for key, value in record.items():
+            if pd.isna(value):
+                record[key] = None
+    
+    return jsonify(records)
 
 @app.route('/api/player/<int:player_id>')
 def get_player_data(player_id):
@@ -166,7 +196,14 @@ def get_rankings(season_id):
         # Sort by Conference and Win PCT
         final_standings = final_standings.sort_values(['CONFERENCE', 'W_PCT'], ascending=[True, False])
         
-        return jsonify(final_standings.to_dict('records'))
+        # Replace NaN with None for valid JSON
+        records = final_standings.to_dict('records')
+        for record in records:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
+        
+        return jsonify(records)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -178,6 +215,20 @@ def get_seasons():
     # Let's just return unique SEASON_IDs sorted
     seasons = sorted([str(s) for s in seasons], reverse=True)
     return jsonify(seasons)
+
+@app.route('/data')
+def show_data():
+    # Return a snippet of each dataset for debugging
+    debug_info = {}
+    for key, df in data.items():
+        # Replace NaN with None
+        records = df.head(5).to_dict('records')
+        for record in records:
+            for k, v in record.items():
+                if pd.isna(v):
+                    record[k] = None
+        debug_info[key] = records
+    return jsonify(debug_info)
 
 if __name__ == '__main__':
     app.run(debug=True)

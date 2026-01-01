@@ -72,5 +72,39 @@
                 loadRankings();
             }
         });
+
+    function loadRankings() {
+        const seasonId = document.getElementById('seasonSelect').value;
+        if (!seasonId) return;
+
+        fetch(`/api/rankings/${seasonId}`)
+            .then(response => response.json())
+            .then(data => {
+                const westTable = document.getElementById('westTable').querySelector('tbody');
+                const eastTable = document.getElementById('eastTable').querySelector('tbody');
+
+                // Clear existing rows
+                westTable.innerHTML = '';
+                eastTable.innerHTML = '';
+
+                data.forEach(team => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-dark-border hover:bg-dark-bg transition-colors duration-200';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 font-medium text-white">${team.TEAM}</td>
+                        <td class="py-3 px-4 text-dark-muted">${team.W}</td>
+                        <td class="py-3 px-4 text-dark-muted">${team.L}</td>
+                        <td class="py-3 px-4 text-accent-primary font-bold">${(team.W_PCT * 100).toFixed(1)}%</td>
+                    `;
+
+                    if (team.CONFERENCE === 'West') {
+                        westTable.appendChild(row);
+                    } else if (team.CONFERENCE === 'East') {
+                        eastTable.appendChild(row);
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading rankings:', error));
+    }
 </script>
 {% endblock %}

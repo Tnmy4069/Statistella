@@ -1,7 +1,6 @@
 import pandas as pd
-import streamlit as st
 
-@st.cache_data
+
 def load_data():
     """
     Loads the NBA datasets from CSV files.
@@ -22,7 +21,7 @@ def load_data():
             'games_details': games_details
         }
     except FileNotFoundError as e:
-        st.error(f"Error loading data: {e}. Please ensure CSV files are in the root directory.")
+        print(f"Error loading data: {e}. Please ensure CSV files are in the root directory.")
         return None
 
 def clean_data(data):
