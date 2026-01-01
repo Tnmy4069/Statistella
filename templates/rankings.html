@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-white mb-2">Conference Standings</h1>
+    <p class="text-dark-muted text-lg">Historical standings by season.</p>
+</div>
+
+<div class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg mb-8">
+    <label for="seasonSelect" class="block text-sm font-medium text-dark-muted mb-2">Select Season</label>
+    <select id="seasonSelect" onchange="loadRankings()"
+        class="w-full md:w-1/3 bg-dark-bg border border-dark-border text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent-primary">
+        <!-- Options populated by JS -->
+    </select>
+</div>
+
+<div id="rankingsContent">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- West Conference -->
+        <div class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold text-accent-secondary mb-4 border-b border-dark-border pb-2">Western Conference
+            </h2>
+            <div class="overflow-x-auto">
+                <table id="westTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-dark-muted text-sm uppercase tracking-wider border-b border-dark-border">
+                            <th class="py-3 px-4">Team</th>
+                            <th class="py-3 px-4">W</th>
+                            <th class="py-3 px-4">L</th>
+                            <th class="py-3 px-4">Win %</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-dark-border"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- East Conference -->
+        <div class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold text-accent-secondary mb-4 border-b border-dark-border pb-2">Eastern Conference
+            </h2>
+            <div class="overflow-x-auto">
+                <table id="eastTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-dark-muted text-sm uppercase tracking-wider border-b border-dark-border">
+                            <th class="py-3 px-4">Team</th>
+                            <th class="py-3 px-4">W</th>
+                            <th class="py-3 px-4">L</th>
+                            <th class="py-3 px-4">Win %</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-dark-border"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load seasons on page load
+    fetch('/api/seasons')
+        .then(response => response.json())
+        .then(seasons => {
+            const select = document.getElementById('seasonSelect');
+            seasons.forEach(season => {
+                const option = document.createElement('option');
+                option.value = season;
+                option.text = season.slice(-4);
+                select.appendChild(option);
+            });
+            if (seasons.length > 0) {
+                loadRankings();
+            }
+        });
+</script>
+{% endblock %}

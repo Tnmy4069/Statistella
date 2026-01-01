@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-white mb-2">League Trends</h1>
+    <p class="text-dark-muted text-lg">Explore how the game has evolved over the years.</p>
+</div>
+
+<!-- Insights Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div
+        class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg hover:shadow-blue-500/10 transition-shadow duration-300">
+        <h3 class="text-dark-muted text-sm font-semibold uppercase tracking-wider mb-2">Highest Scoring Game</h3>
+        <p class="text-3xl font-bold text-accent-secondary">{{ insights.highest_scoring_game }}</p>
+    </div>
+    <div
+        class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg hover:shadow-blue-500/10 transition-shadow duration-300">
+        <h3 class="text-dark-muted text-sm font-semibold uppercase tracking-wider mb-2">Highest Scoring Season</h3>
+        <p class="text-3xl font-bold text-accent-secondary">{{ insights.best_scoring_season }}</p>
+    </div>
+</div>
+
+<!-- Main Chart -->
+<div class="bg-dark-card border border-dark-border rounded-xl p-6 shadow-lg">
+    <div id="trendChart" class="w-full h-[500px]"></div>
+</div>
+
+<script>
+    var graphData = {{ graphJSON | safe }};
+    var layout = graphData.layout;
+    layout.paper_bgcolor = 'rgba(0,0,0,0)';
+    layout.plot_bgcolor = 'rgba(0,0,0,0)';
+    layout.font = { color: '#f1f5f9', family: 'Inter' };
+    layout.xaxis = { ...layout.xaxis, gridcolor: '#334155' };
+    layout.yaxis = { ...layout.yaxis, gridcolor: '#334155' };
+
+    Plotly.newPlot('trendChart', graphData.data, layout, { responsive: true, displayModeBar: false });
+</script>
+{% endblock %}
